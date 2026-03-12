@@ -61,7 +61,7 @@ echo "----------------------------------------------------" >> "$LOG_FILE"
 # 2. PERMISSION
 echo "[2/4] Mengatur izin direktori..." >> "$LOG_FILE"
 sudo /usr/bin/chown -R www-data:www-data "$PROJECT_PATH"
-sudo /usr/bin/chmod -R 775 "$PROJECT_PATH"
+sudo /usr/bin/chmod -R 755 "$PROJECT_PATH"
 
 # 3. SYSTEMD SERVICE GENERATION
 echo "[3/4] Konfigurasi Systemd Service: ${SERVICE_NAME}" >> "$LOG_FILE"
@@ -78,7 +78,7 @@ WorkingDirectory=$PROJECT_PATH
 Environment="HOME=$PROJECT_PATH"
 Environment="PATH=$PROJECT_PATH/venv/bin"
 # Format Gunicorn: modul:instansi (misal app:app)
-ExecStart=$PROJECT_PATH/venv/bin/gunicorn --chdir $PROJECT_PATH --workers 3 --timeout 120 --bind unix:$PROJECT_PATH/app.sock $APP_MODULE:$FLASK_INSTANCE
+ExecStart=$PROJECT_PATH/venv/bin/gunicorn --workers 3 --bind unix:$PROJECT_PATH/app.sock $APP_MODULE:$FLASK_INSTANCE
 
 [Install]
 WantedBy=multi-user.target
@@ -90,12 +90,7 @@ sudo /usr/bin/systemctl restart $SERVICE_NAME >> "$LOG_FILE" 2>&1
 
 # 4. NGINX CONFIGURATION
 echo "[4/4] Membuat konfigurasi Nginx Reverse Proxy..." >> "$LOG_FILE"
-echo "Menunggu Gunicorn membuat socket..." >> "$LOG_FILE"
-sleep 5
-
 NGINX_CONF="/etc/nginx/sites-available/$FULL_DOMAIN.conf"
-# Gunakan chmod 775 agar grup www-data bisa menulis socket
-sudo /usr/bin/chmod -R 775 "$PROJECT_PATH"
 
 sudo /usr/bin/bash -c "cat > $NGINX_CONF" <<EOF
 server {
